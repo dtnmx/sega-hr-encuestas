@@ -1,0 +1,58 @@
+/* ============================================================
+   Tema base — Encuesta de Satisfacción SEGA
+   El color de acento es una variable. Default = teal (patrón Operly)
+   hasta definir el color corporativo de SEGA (decisión pendiente #4).
+   ============================================================ */
+:root {
+  --accent: #1fb6d1;
+  --accent-dark: #0e9ab5;
+  --accent-bg: #e0f7fc;
+
+  --text: #1e293b;
+  --text-muted: #64748b;
+  --text-faint: #94a3b8;
+  --bg: #f1f5f9;
+  --surface: #ffffff;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+
+  --ok: #16a34a;
+  --warn: #f59e0b;
+  --danger: #dc2626;
+
+  --radius: 12px;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
+    Arial, sans-serif;
+
+  font-family: var(--sans);
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3 {
+  color: var(--text);
+  margin: 0;
+}
+
+p {
+  margin: 0;
+}
+
+button {
+  font-family: inherit;
+}

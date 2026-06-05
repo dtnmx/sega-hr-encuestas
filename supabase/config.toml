@@ -1,0 +1,25 @@
+# Configuración del proyecto Supabase para la Encuesta SEGA.
+# Mínima a propósito: el CLI rellena el resto de defaults.
+# Docs: https://supabase.com/docs/guides/local-development/cli/config
+project_id = "sega-encuesta"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+# Debe coincidir con la versión del proyecto remoto (org DTNmx usa Postgres 17).
+major_version = 17
+
+[storage]
+enabled = true
+
+[auth]
+enabled = true
+# Sin signup público: las cuentas de admin se crean manualmente.
+enable_signup = false

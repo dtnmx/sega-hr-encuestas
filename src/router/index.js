@@ -1,0 +1,46 @@
+import { createRouter, createWebHistory } from 'vue-router'
+
+// Rutas del .md §2. Por ahora las vistas son stubs de Fase 1.
+// El guard de auth para /admin/* se conecta en la Fase 1 (stores/auth.js).
+const routes = [
+  {
+    path: '/',
+    name: 'survey',
+    component: () => import('../views/PublicSurveyView.vue'),
+  },
+  {
+    path: '/gracias',
+    name: 'thank-you',
+    component: () => import('../views/ThankYouView.vue'),
+  },
+  {
+    path: '/admin/login',
+    name: 'admin-login',
+    component: () => import('../views/AdminLoginView.vue'),
+  },
+  {
+    path: '/admin',
+    name: 'admin-dashboard',
+    component: () => import('../views/AdminDashboardView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/admin/comentarios',
+    name: 'admin-comments',
+    component: () => import('../views/AdminCommentsView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/admin/plan',
+    name: 'admin-plan',
+    component: () => import('../views/AdminPlanView.vue'),
+    meta: { requiresAuth: true },
+  },
+]
+
+const router = createRouter({
+  history: createWebHistory(),
+  routes,
+})
+
+export default router
