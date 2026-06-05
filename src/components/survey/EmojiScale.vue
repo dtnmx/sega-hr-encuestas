@@ -74,6 +74,23 @@ const scale = [
   background: var(--accent-bg);
   border-color: var(--accent);
   transform: scale(1.1);
+  animation: emoji-pop 0.28s ease;
+}
+@keyframes emoji-pop {
+  0% {
+    transform: scale(1);
+  }
+  55% {
+    transform: scale(1.28);
+  }
+  100% {
+    transform: scale(1.1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scale-btn.active {
+    animation: none;
+  }
 }
 @media (max-width: 600px) {
   .emoji-scale {

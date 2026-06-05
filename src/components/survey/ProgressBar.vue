@@ -36,9 +36,14 @@ const pct = computed(() =>
 }
 .fill {
   height: 100%;
-  background: var(--accent);
+  background: linear-gradient(90deg, var(--accent-dark), var(--accent));
   border-radius: 999px;
-  transition: width 0.3s ease;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .fill {
+    transition: none;
+  }
 }
 .step-text {
   font-size: 0.78rem;

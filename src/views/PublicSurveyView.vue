@@ -27,11 +27,21 @@ const CONTENT_SCREENS = 6
 const isWelcome = computed(() => step.value === 0)
 const isLast = computed(() => step.value === CONTENT_SCREENS)
 
+// Dirección de la transición: 'next' (desliza hacia la izq.) o 'prev'.
+const dir = ref('next')
+const transitionName = computed(() => `slide-${dir.value}`)
+
 function next() {
-  if (step.value < CONTENT_SCREENS) step.value++
+  if (step.value < CONTENT_SCREENS) {
+    dir.value = 'next'
+    step.value++
+  }
 }
 function back() {
-  if (step.value > 0) step.value--
+  if (step.value > 0) {
+    dir.value = 'prev'
+    step.value--
+  }
 }
 
 async function onSubmit() {
@@ -73,81 +83,87 @@ onMounted(async () => {
       <template v-else>
         <ProgressBar :current="step - 1" :total="CONTENT_SCREENS" class="progress" />
 
-        <!-- 1. Jefatura -->
-        <section v-if="step === 1" class="screen">
-          <h2>Tu jefatura inmediata</h2>
-          <EmojiScale v-model="form.jefatura_comunicacion" label="Se comunica de forma clara" />
-          <EmojiScale v-model="form.jefatura_trato" label="Me trata con respeto" />
-          <EmojiScale v-model="form.jefatura_apoyo" label="Me apoya cuando lo necesito" />
-          <textarea
-            v-model="form.jefatura_comentario"
-            class="comment"
-            rows="2"
-            placeholder="¿Algo que quieras agregar? (opcional)"
-          ></textarea>
-        </section>
+        <div class="screen-stage">
+          <Transition :name="transitionName" mode="out-in" appear>
+            <section :key="step" class="screen">
+              <!-- 1. Jefatura -->
+              <template v-if="step === 1">
+                <h2>Tu jefatura inmediata</h2>
+                <EmojiScale v-model="form.jefatura_comunicacion" label="Se comunica de forma clara" />
+                <EmojiScale v-model="form.jefatura_trato" label="Me trata con respeto" />
+                <EmojiScale v-model="form.jefatura_apoyo" label="Me apoya cuando lo necesito" />
+                <textarea
+                  v-model="form.jefatura_comentario"
+                  class="comment"
+                  rows="2"
+                  placeholder="¿Algo que quieras agregar? (opcional)"
+                ></textarea>
+              </template>
 
-        <!-- 2. Compañeros -->
-        <section v-if="step === 2" class="screen">
-          <h2>Tus compañeros de trabajo</h2>
-          <EmojiScale v-model="form.companeros_equipo" label="Trabajamos bien en equipo" />
-          <EmojiScale v-model="form.companeros_respeto" label="Hay respeto entre nosotros" />
-          <EmojiScale v-model="form.companeros_ambiente" label="El ambiente es agradable" />
-          <textarea
-            v-model="form.companeros_comentario"
-            class="comment"
-            rows="2"
-            placeholder="¿Algo que quieras agregar? (opcional)"
-          ></textarea>
-        </section>
+              <!-- 2. Compañeros -->
+              <template v-else-if="step === 2">
+                <h2>Tus compañeros de trabajo</h2>
+                <EmojiScale v-model="form.companeros_equipo" label="Trabajamos bien en equipo" />
+                <EmojiScale v-model="form.companeros_respeto" label="Hay respeto entre nosotros" />
+                <EmojiScale v-model="form.companeros_ambiente" label="El ambiente es agradable" />
+                <textarea
+                  v-model="form.companeros_comentario"
+                  class="comment"
+                  rows="2"
+                  placeholder="¿Algo que quieras agregar? (opcional)"
+                ></textarea>
+              </template>
 
-        <!-- 3. Seguridad -->
-        <section v-if="step === 3" class="screen">
-          <h2>Seguridad en el trabajo</h2>
-          <EmojiScale v-model="form.seguridad_nivel" label="Me siento seguro en mi área de trabajo" />
-          <textarea
-            v-model="form.seguridad_comentario"
-            class="comment"
-            rows="3"
-            placeholder="¿Hay algo inseguro que debamos atender? (opcional)"
-          ></textarea>
-        </section>
+              <!-- 3. Seguridad -->
+              <template v-else-if="step === 3">
+                <h2>Seguridad en el trabajo</h2>
+                <EmojiScale v-model="form.seguridad_nivel" label="Me siento seguro en mi área de trabajo" />
+                <textarea
+                  v-model="form.seguridad_comentario"
+                  class="comment"
+                  rows="3"
+                  placeholder="¿Hay algo inseguro que debamos atender? (opcional)"
+                ></textarea>
+              </template>
 
-        <!-- 4. Instalaciones -->
-        <section v-if="step === 4" class="screen">
-          <h2>Las instalaciones</h2>
-          <EmojiScale v-model="form.instalaciones_estado" label="Están en buen estado" />
-          <EmojiScale v-model="form.instalaciones_limpieza" label="Están limpias" />
-          <EmojiScale v-model="form.instalaciones_comodidad" label="Son cómodas para trabajar" />
-          <textarea
-            v-model="form.instalaciones_comentario"
-            class="comment"
-            rows="2"
-            placeholder="¿Algo que quieras agregar? (opcional)"
-          ></textarea>
-        </section>
+              <!-- 4. Instalaciones -->
+              <template v-else-if="step === 4">
+                <h2>Las instalaciones</h2>
+                <EmojiScale v-model="form.instalaciones_estado" label="Están en buen estado" />
+                <EmojiScale v-model="form.instalaciones_limpieza" label="Están limpias" />
+                <EmojiScale v-model="form.instalaciones_comodidad" label="Son cómodas para trabajar" />
+                <textarea
+                  v-model="form.instalaciones_comentario"
+                  class="comment"
+                  rows="2"
+                  placeholder="¿Algo que quieras agregar? (opcional)"
+                ></textarea>
+              </template>
 
-        <!-- 5. Propuesta + Importancia -->
-        <section v-if="step === 5" class="screen">
-          <h2>¿Qué propondrías para mejorar?</h2>
-          <textarea
-            v-model="form.propuesta_libre"
-            class="comment"
-            rows="3"
-            placeholder="Tu idea o sugerencia (opcional)"
-          ></textarea>
-          <h3 class="sub">De todo lo anterior, ¿qué es lo MÁS importante para ti? <span class="hint">(elige hasta 2)</span></h3>
-          <ImportanceChips v-model="form.importancia_top" />
-        </section>
+              <!-- 5. Propuesta + Importancia -->
+              <template v-else-if="step === 5">
+                <h2>¿Qué propondrías para mejorar?</h2>
+                <textarea
+                  v-model="form.propuesta_libre"
+                  class="comment"
+                  rows="3"
+                  placeholder="Tu idea o sugerencia (opcional)"
+                ></textarea>
+                <h3 class="sub">De todo lo anterior, ¿qué es lo MÁS importante para ti? <span class="hint">(elige hasta 2)</span></h3>
+                <ImportanceChips v-model="form.importancia_top" />
+              </template>
 
-        <!-- 6. Identidad -->
-        <section v-if="step === 6" class="screen">
-          <h2>¿Cómo quieres enviar tu respuesta?</h2>
-          <IdentityToggle
-            v-model:anonymous="form.is_anonymous"
-            v-model:name="form.employee_name"
-          />
-        </section>
+              <!-- 6. Identidad -->
+              <template v-else-if="step === 6">
+                <h2>¿Cómo quieres enviar tu respuesta?</h2>
+                <IdentityToggle
+                  v-model:anonymous="form.is_anonymous"
+                  v-model:name="form.employee_name"
+                />
+              </template>
+            </section>
+          </Transition>
+        </div>
 
         <!-- Navegación -->
         <div class="nav">
@@ -267,5 +283,41 @@ onMounted(async () => {
   text-align: center;
   margin-top: 14px;
   font-size: 0.9rem;
+}
+
+/* Transición deslizante entre pantallas */
+.screen-stage {
+  overflow: hidden;
+}
+.slide-next-enter-active,
+.slide-next-leave-active,
+.slide-prev-enter-active,
+.slide-prev-leave-active {
+  transition: transform 0.28s ease, opacity 0.28s ease;
+}
+.slide-next-enter-from {
+  transform: translateX(36px);
+  opacity: 0;
+}
+.slide-next-leave-to {
+  transform: translateX(-36px);
+  opacity: 0;
+}
+.slide-prev-enter-from {
+  transform: translateX(-36px);
+  opacity: 0;
+}
+.slide-prev-leave-to {
+  transform: translateX(36px);
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slide-next-enter-active,
+  .slide-next-leave-active,
+  .slide-prev-enter-active,
+  .slide-prev-leave-active {
+    transition: none;
+  }
 }
 </style>
