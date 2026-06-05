@@ -1,12 +1,13 @@
 /* ============================================================
    Tema base — Encuesta de Satisfacción SEGA
-   El color de acento es una variable. Default = teal (patrón Operly)
-   hasta definir el color corporativo de SEGA (decisión pendiente #4).
+   Paleta corporativa SEGA Carriers: rojo + negro (muestreado del logo).
    ============================================================ */
 :root {
-  --accent: #1fb6d1;
-  --accent-dark: #0e9ab5;
-  --accent-bg: #e0f7fc;
+  --accent: #e63329; /* rojo SEGA Carriers (swoosh del logo) */
+  --accent-dark: #c42218; /* hover/active */
+  --accent-bg: #fdecea; /* tinte claro del rojo */
+
+  --ink: #16181d; /* negro corporativo (textos fuertes, header) */
 
   --text: #1e293b;
   --text-muted: #64748b;
