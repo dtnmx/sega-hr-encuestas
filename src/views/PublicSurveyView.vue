@@ -10,12 +10,13 @@ import { useSurveyStore } from '../stores/survey'
 import WelcomeScreen from '../components/survey/WelcomeScreen.vue'
 import ProgressBar from '../components/survey/ProgressBar.vue'
 import EmojiScale from '../components/survey/EmojiScale.vue'
+import AudioRecorder from '../components/survey/AudioRecorder.vue'
 import ImportanceChips from '../components/survey/ImportanceChips.vue'
 import IdentityToggle from '../components/survey/IdentityToggle.vue'
 
 const router = useRouter()
 const store = useSurveyStore()
-const { form, step, submitting } = storeToRefs(store)
+const { form, audios, step, submitting } = storeToRefs(store)
 
 const submitError = ref('')
 
@@ -81,6 +82,7 @@ onMounted(() => {
                   rows="2"
                   placeholder="¿Algo que quieras agregar? (opcional)"
                 ></textarea>
+                <AudioRecorder v-model="audios.jefatura" />
               </template>
 
               <!-- 2. Compañeros -->
@@ -95,6 +97,7 @@ onMounted(() => {
                   rows="2"
                   placeholder="¿Algo que quieras agregar? (opcional)"
                 ></textarea>
+                <AudioRecorder v-model="audios.companeros" />
               </template>
 
               <!-- 3. Seguridad -->
@@ -107,6 +110,7 @@ onMounted(() => {
                   rows="3"
                   placeholder="¿Hay algo inseguro que debamos atender? (opcional)"
                 ></textarea>
+                <AudioRecorder v-model="audios.seguridad" />
               </template>
 
               <!-- 4. Instalaciones -->
@@ -121,6 +125,7 @@ onMounted(() => {
                   rows="2"
                   placeholder="¿Algo que quieras agregar? (opcional)"
                 ></textarea>
+                <AudioRecorder v-model="audios.instalaciones" />
               </template>
 
               <!-- 5. Propuesta + Importancia -->
@@ -132,6 +137,7 @@ onMounted(() => {
                   rows="3"
                   placeholder="Tu idea o sugerencia (opcional)"
                 ></textarea>
+                <AudioRecorder v-model="audios.propuesta" />
                 <h3 class="sub">De todo lo anterior, ¿qué es lo MÁS importante para ti? <span class="hint">(elige hasta 2)</span></h3>
                 <ImportanceChips v-model="form.importancia_top" />
               </template>

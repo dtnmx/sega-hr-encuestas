@@ -1,8 +1,16 @@
 import { defineStore } from 'pinia'
 import { supabase } from '../lib/supabase'
+import { extensionForMime } from '../lib/audio-recorder'
+
+const AUDIO_BUCKET = 'survey-audios'
+// Secciones que pueden llevar nota de voz → columna *_audio_url.
+const AUDIO_SECTIONS = ['jefatura', 'companeros', 'seguridad', 'instalaciones', 'propuesta']
 
 // Estado del formulario público en progreso (las pantallas del flujo).
-// Las URLs de audio se llenarán en el siguiente incremento (AudioRecorder).
+function emptyAudios() {
+  return { jefatura: null, companeros: null, seguridad: null, instalaciones: null, propuesta: null }
+}
+
 function emptyForm() {
   return {
     is_anonymous: true,
@@ -41,6 +49,7 @@ function emptyForm() {
 export const useSurveyStore = defineStore('survey', {
   state: () => ({
     form: emptyForm(),
+    audios: emptyAudios(), // { section: Blob | null }
     step: 0,
     submitting: false,
   }),
@@ -48,6 +57,7 @@ export const useSurveyStore = defineStore('survey', {
   actions: {
     reset() {
       this.form = emptyForm()
+      this.audios = emptyAudios()
       this.step = 0
     },
 
@@ -86,9 +96,31 @@ export const useSurveyStore = defineStore('survey', {
     async submit() {
       this.submitting = true
       try {
+        // UUID local: sirve de id de la fila y de carpeta en Storage.
+        const id =
+          crypto.randomUUID?.() ??
+          `${Date.now()}-${Math.random().toString(16).slice(2)}`
+
+        // Subir las notas de voz al bucket privado: {id}/{section}.{ext}
+        const audioUrls = {}
+        for (const section of AUDIO_SECTIONS) {
+          const blob = this.audios[section]
+          if (!blob) continue
+          const ext = extensionForMime(blob.type)
+          const path = `${id}/${section}.${ext}`
+          const { error: upErr } = await supabase.storage
+            .from(AUDIO_BUCKET)
+            .upload(path, blob, {
+              contentType: blob.type || 'audio/webm',
+              upsert: false,
+            })
+          if (upErr) throw upErr
+          audioUrls[`${section}_audio_url`] = path
+        }
+
         const { error } = await supabase
           .from('survey_responses')
-          .insert(this.buildPayload())
+          .insert({ id, ...this.buildPayload(), ...audioUrls })
         if (error) throw error
       } finally {
         this.submitting = false
