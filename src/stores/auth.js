@@ -1,8 +1,7 @@
 import { defineStore } from 'pinia'
+import { supabase } from '../lib/supabase'
 
 // Sesión de Cecilia / admins (Supabase Auth).
-// TODO (Fase 1): signIn/signOut, restaurar sesión persistida,
-// exponer `user` y usarlo en el guard de /admin/*.
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: null,
@@ -10,5 +9,30 @@ export const useAuthStore = defineStore('auth', {
   }),
   getters: {
     isAuthenticated: (state) => !!state.user,
+  },
+  actions: {
+    // Restaura la sesión persistida y se suscribe a cambios. Llamar una vez al arrancar.
+    async init() {
+      const { data } = await supabase.auth.getSession()
+      this.user = data.session?.user ?? null
+      this.loading = false
+      supabase.auth.onAuthStateChange((_event, session) => {
+        this.user = session?.user ?? null
+      })
+    },
+
+    async signIn(email, password) {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+      if (error) throw error
+      this.user = data.user
+    },
+
+    async signOut() {
+      await supabase.auth.signOut()
+      this.user = null
+    },
   },
 })

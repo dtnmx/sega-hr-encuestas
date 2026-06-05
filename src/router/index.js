@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
 
 // Rutas del .md §2. Por ahora las vistas son stubs de Fase 1.
 // El guard de auth para /admin/* se conecta en la Fase 1 (stores/auth.js).
@@ -41,6 +42,17 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes,
+})
+
+// Guard de acceso al panel admin.
+router.beforeEach((to) => {
+  const auth = useAuthStore()
+  if (to.meta.requiresAuth && !auth.isAuthenticated) {
+    return { name: 'admin-login', query: { redirect: to.fullPath } }
+  }
+  if (to.name === 'admin-login' && auth.isAuthenticated) {
+    return { name: 'admin-dashboard' }
+  }
 })
 
 export default router
