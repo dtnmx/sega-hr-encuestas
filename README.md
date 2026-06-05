@@ -33,8 +33,9 @@ supabase/
 
 ## Estado
 
-Commit 1: scaffold + estructura + schema versionado. Sin features todavía.
-Schema **aún no aplicado** a Supabase (proyecto pendiente de decidir).
+Setup + estructura + schema versionado. Sin features todavía.
+Schema **aplicado** al proyecto Supabase `sega-hr-encuestas` (org DTNmx,
+ref `xaysmoycchyjddjuxbum`, us-east-1) — migraciones 001 + 002.
 
 ## Roadmap
 
