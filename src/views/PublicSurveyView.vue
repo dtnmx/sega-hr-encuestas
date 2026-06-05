@@ -1,11 +1,10 @@
 <script setup>
-// Formulario público — la página del QR (ruta /?loc=planta1).
+// Formulario público — la página del QR (un solo QR, sin ubicación).
 // Flujo: bienvenida → 4 áreas → propuesta+importancia → identidad → enviar.
 // Audio por sección: pendiente del siguiente incremento (AudioRecorder).
 import { ref, computed, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
-import { supabase } from '../lib/supabase'
 import { useSurveyStore } from '../stores/survey'
 
 import WelcomeScreen from '../components/survey/WelcomeScreen.vue'
@@ -14,12 +13,10 @@ import EmojiScale from '../components/survey/EmojiScale.vue'
 import ImportanceChips from '../components/survey/ImportanceChips.vue'
 import IdentityToggle from '../components/survey/IdentityToggle.vue'
 
-const route = useRoute()
 const router = useRouter()
 const store = useSurveyStore()
 const { form, step, submitting } = storeToRefs(store)
 
-const locationName = ref('SEGA')
 const submitError = ref('')
 
 // step 0 = bienvenida; 1..6 = pantallas de contenido.
@@ -55,22 +52,8 @@ async function onSubmit() {
   }
 }
 
-onMounted(async () => {
+onMounted(() => {
   store.reset()
-  const loc = route.query.loc
-  if (!loc) return
-  // Buscar el nombre legible; si no existe/activa, dejar location en null
-  // (evita violar el FK) y mostrar "SEGA".
-  const { data } = await supabase
-    .from('locations')
-    .select('code, name')
-    .eq('code', loc)
-    .eq('active', true)
-    .maybeSingle()
-  if (data) {
-    locationName.value = data.name
-    store.setLocation(data.code)
-  }
 })
 </script>
 
@@ -78,7 +61,7 @@ onMounted(async () => {
   <div class="survey-page">
     <div class="survey-card">
       <!-- Pantalla 0: bienvenida -->
-      <WelcomeScreen v-if="isWelcome" :location-name="locationName" @start="next" />
+      <WelcomeScreen v-if="isWelcome" @start="next" />
 
       <template v-else>
         <ProgressBar :current="step - 1" :total="CONTENT_SCREENS" class="progress" />

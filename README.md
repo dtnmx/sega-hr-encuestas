@@ -27,8 +27,8 @@ src/
 ├── components/   # survey/ (form) + admin/ (dashboard)
 └── composables/  # useRealtimeResponses, useSatisfactionReport
 supabase/
-├── migrations/   # schema versionado (001_initial_schema.sql)
-└── seed.sql      # ubicaciones de los QR
+├── migrations/   # schema versionado (001..003)
+└── seed.sql      # vacío (un solo QR, sin ubicaciones)
 ```
 
 ## Estado

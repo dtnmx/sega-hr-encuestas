@@ -1,8 +1,5 @@
 <script setup>
-// Pantalla 1: bienvenida con el nombre legible de la ubicación.
-defineProps({
-  locationName: { type: String, default: 'SEGA' },
-})
+// Pantalla 1: bienvenida (un solo QR, sin ubicación).
 const emit = defineEmits(['start'])
 </script>
 
@@ -11,7 +8,7 @@ const emit = defineEmits(['start'])
     <img src="/logo-sega.jpeg" alt="SEGA Carriers" class="logo" />
     <h1>Tu opinión cuenta</h1>
     <p class="lead">
-      Cuéntanos cómo te sientes trabajando en <strong>{{ locationName }}</strong>.
+      Cuéntanos cómo te sientes trabajando en <strong>SEGA Carriers</strong>.
       Es anónimo y toma menos de 2 minutos.
     </p>
     <button type="button" class="start-btn" @click="emit('start')">

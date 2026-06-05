@@ -5,7 +5,6 @@ import { supabase } from '../lib/supabase'
 // Las URLs de audio se llenarán en el siguiente incremento (AudioRecorder).
 function emptyForm() {
   return {
-    location: null, // code de locations (?loc=...)
     is_anonymous: true,
     employee_name: '',
 
@@ -47,10 +46,6 @@ export const useSurveyStore = defineStore('survey', {
   }),
 
   actions: {
-    setLocation(code) {
-      this.form.location = code
-    },
-
     reset() {
       this.form = emptyForm()
       this.step = 0
@@ -60,7 +55,6 @@ export const useSurveyStore = defineStore('survey', {
     buildPayload() {
       const f = this.form
       return {
-        location: f.location,
         is_anonymous: f.is_anonymous,
         employee_name: f.is_anonymous ? null : f.employee_name.trim() || null,
 
