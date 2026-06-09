@@ -2,7 +2,7 @@
 // Formulario público — la página del QR (un solo QR, sin ubicación).
 // Flujo: bienvenida → 4 áreas → propuesta+importancia → identidad → enviar.
 // Audio por sección: pendiente del siguiente incremento (AudioRecorder).
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useSurveyStore } from '../stores/survey'
@@ -25,14 +25,44 @@ const CONTENT_SCREENS = 6
 const isWelcome = computed(() => step.value === 0)
 const isLast = computed(() => step.value === CONTENT_SCREENS)
 
+// Validación por pantalla: hay que responder todo para avanzar.
+// "Respondido" = valor != null (N/A guarda 0, que también cuenta).
+const stepValid = computed(() => {
+  const f = form.value
+  switch (step.value) {
+    case 1:
+      return f.jefatura_comunicacion != null && f.jefatura_trato != null && f.jefatura_apoyo != null
+    case 2:
+      return f.companeros_equipo != null && f.companeros_respeto != null && f.companeros_ambiente != null
+    case 3:
+      return f.seguridad_nivel != null
+    case 4:
+      return f.instalaciones_estado != null && f.instalaciones_limpieza != null && f.instalaciones_comodidad != null
+    case 5:
+      return f.importancia_top.length >= 1
+    case 6:
+      return f.is_anonymous || f.employee_name.trim().length > 0
+    default:
+      return true
+  }
+})
+const stepHint = computed(() => {
+  if (stepValid.value) return ''
+  if (step.value === 5) return 'Elige al menos un área importante para continuar.'
+  if (step.value === 6) return 'Escribe tu nombre o elige “Anónimo”.'
+  return 'Responde todas las preguntas para continuar.'
+})
+
 // Dirección de la transición: 'next' (desliza hacia la izq.) o 'prev'.
 const dir = ref('next')
 const transitionName = computed(() => `slide-${dir.value}`)
 
 function next() {
+  if (!stepValid.value) return
   if (step.value < CONTENT_SCREENS) {
     dir.value = 'next'
     step.value++
+    store.saveDraft() // guarda la sección recién completada
   }
 }
 function back() {
@@ -53,8 +83,33 @@ async function onSubmit() {
   }
 }
 
+// Autoguardado mientras escribe (debounce) + flush al salir de la página, para
+// no perder lo que alcanzó a llenar aunque no presione "Siguiente" ni "Enviar".
+let saveTimer = null
+function scheduleSave() {
+  clearTimeout(saveTimer)
+  saveTimer = setTimeout(() => store.saveDraft(), 1200)
+}
+function flushSave() {
+  clearTimeout(saveTimer)
+  store.saveDraft()
+}
+function onHidden() {
+  if (document.visibilityState === 'hidden') flushSave()
+}
+
+watch(form, scheduleSave, { deep: true })
+
 onMounted(() => {
   store.reset()
+  window.addEventListener('pagehide', flushSave)
+  document.addEventListener('visibilitychange', onHidden)
+})
+
+onBeforeUnmount(() => {
+  clearTimeout(saveTimer)
+  window.removeEventListener('pagehide', flushSave)
+  document.removeEventListener('visibilitychange', onHidden)
 })
 </script>
 
@@ -154,6 +209,9 @@ onMounted(() => {
           </Transition>
         </div>
 
+        <!-- Mensaje guía cuando faltan respuestas -->
+        <p v-if="stepHint" class="hint-required">{{ stepHint }}</p>
+
         <!-- Navegación -->
         <div class="nav">
           <button type="button" class="btn ghost" @click="back">Atrás</button>
@@ -161,6 +219,7 @@ onMounted(() => {
             v-if="!isLast"
             type="button"
             class="btn primary"
+            :disabled="!stepValid"
             @click="next"
           >
             Siguiente
@@ -169,7 +228,7 @@ onMounted(() => {
             v-else
             type="button"
             class="btn primary"
-            :disabled="submitting"
+            :disabled="submitting || !stepValid"
             @click="onSubmit"
           >
             {{ submitting ? 'Enviando…' : 'Enviar' }}
@@ -231,6 +290,13 @@ onMounted(() => {
 .comment:focus {
   outline: none;
   border-color: var(--accent);
+}
+.hint-required {
+  margin-top: 22px;
+  margin-bottom: -8px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--warn);
 }
 .nav {
   display: flex;

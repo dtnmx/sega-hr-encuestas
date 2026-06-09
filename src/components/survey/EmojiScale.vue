@@ -32,6 +32,16 @@ const scale = [
       >
         {{ opt.icon }}
       </button>
+      <button
+        type="button"
+        role="radio"
+        :aria-checked="modelValue === 0"
+        :class="['scale-btn', 'na-btn', { active: modelValue === 0 }]"
+        title="No aplica"
+        @click="emit('update:modelValue', 0)"
+      >
+        N/A
+      </button>
     </div>
   </div>
 </template>
@@ -75,6 +85,20 @@ const scale = [
   border-color: var(--accent);
   transform: scale(1.1);
   animation: emoji-pop 0.28s ease;
+}
+/* "No aplica": texto en vez de carita, un poco más sobrio. */
+.na-btn {
+  width: auto;
+  min-width: 44px;
+  padding: 0 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-left: 4px;
+}
+.na-btn.active {
+  color: var(--accent-dark);
+  animation: none;
 }
 @keyframes emoji-pop {
   0% {

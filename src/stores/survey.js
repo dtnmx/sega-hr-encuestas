@@ -46,19 +46,52 @@ function emptyForm() {
   }
 }
 
+// UUID local: sirve de id de la fila y de carpeta en Storage.
+function newId() {
+  return (
+    crypto.randomUUID?.() ??
+    `${Date.now()}-${Math.random().toString(16).slice(2)}`
+  )
+}
+
 export const useSurveyStore = defineStore('survey', {
   state: () => ({
+    id: null, // id de la fila (se reserva al iniciar para el guardado parcial)
     form: emptyForm(),
     audios: emptyAudios(), // { section: Blob | null }
     step: 0,
     submitting: false,
+    savingDraft: false,
+    completed: false, // true tras enviar; corta autoguardados tardíos
   }),
+
+  getters: {
+    // ¿Hay algo que valga la pena guardar? Evita filas-borrador vacías.
+    hasAnyData(state) {
+      const f = state.form
+      return (
+        [
+          f.jefatura_comunicacion, f.jefatura_trato, f.jefatura_apoyo,
+          f.companeros_equipo, f.companeros_respeto, f.companeros_ambiente,
+          f.seguridad_nivel,
+          f.instalaciones_estado, f.instalaciones_limpieza, f.instalaciones_comodidad,
+        ].some((v) => v != null) ||
+        [
+          f.jefatura_comentario, f.companeros_comentario, f.seguridad_comentario,
+          f.instalaciones_comentario, f.propuesta_libre, f.employee_name,
+        ].some((s) => s.trim()) ||
+        f.importancia_top.length > 0
+      )
+    },
+  },
 
   actions: {
     reset() {
+      this.id = newId()
       this.form = emptyForm()
       this.audios = emptyAudios()
       this.step = 0
+      this.completed = false
     },
 
     // Construye el payload limpio para survey_responses.
@@ -93,14 +126,28 @@ export const useSurveyStore = defineStore('survey', {
       }
     },
 
+    // Guardado parcial: upsert de la fila con is_complete=false mientras el
+    // empleado avanza. No sube audios (eso ocurre solo al enviar). Best-effort:
+    // un fallo de red no debe romper el flujo del formulario.
+    async saveDraft() {
+      if (this.completed || this.savingDraft || !this.id || !this.hasAnyData) return
+      this.savingDraft = true
+      try {
+        const { error } = await supabase
+          .from('survey_responses')
+          .upsert({ id: this.id, ...this.buildPayload(), is_complete: false })
+        if (error) throw error
+      } catch (err) {
+        console.warn('[survey saveDraft]', err)
+      } finally {
+        this.savingDraft = false
+      }
+    },
+
     async submit() {
       this.submitting = true
       try {
-        // UUID local: sirve de id de la fila y de carpeta en Storage.
-        const id =
-          crypto.randomUUID?.() ??
-          `${Date.now()}-${Math.random().toString(16).slice(2)}`
-
+        const id = this.id
         // Subir las notas de voz al bucket privado: {id}/{section}.{ext}
         const audioUrls = {}
         for (const section of AUDIO_SECTIONS) {
@@ -112,16 +159,18 @@ export const useSurveyStore = defineStore('survey', {
             .from(AUDIO_BUCKET)
             .upload(path, blob, {
               contentType: blob.type || 'audio/webm',
-              upsert: false,
+              upsert: true,
             })
           if (upErr) throw upErr
           audioUrls[`${section}_audio_url`] = path
         }
 
+        // upsert (no insert): la fila ya puede existir como borrador parcial.
         const { error } = await supabase
           .from('survey_responses')
-          .insert({ id, ...this.buildPayload(), ...audioUrls })
+          .upsert({ id, ...this.buildPayload(), ...audioUrls, is_complete: true })
         if (error) throw error
+        this.completed = true
       } finally {
         this.submitting = false
       }

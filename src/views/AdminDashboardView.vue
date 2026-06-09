@@ -18,6 +18,13 @@ const to = ref('')
 
 const FACES = ['', '😣', '🙁', '😐', '🙂', '😀']
 
+// Render de una calificación: null/sin dato → '·'; 0 → 'N/A'; 1..5 → carita.
+function faceFor(v) {
+  if (v == null) return '·'
+  if (v === 0) return 'N/A'
+  return FACES[v]
+}
+
 // Configuración de áreas para render (columnas de la tabla survey_responses).
 const AREAS = [
   {
@@ -66,13 +73,17 @@ const AUDIO_COLS = [
 ]
 const RATING_COLS = AREAS.flatMap((a) => a.items.map(([k]) => k))
 
-const total = computed(() => responses.value.length)
+// Completas = encuesta enviada; parciales = abandonada a medias (is_complete=false).
+const completas = computed(() => responses.value.filter((r) => r.is_complete))
+const total = computed(() => completas.value.length)
+const parciales = computed(() => responses.value.length - completas.value.length)
 const avgGeneral = computed(() => {
   let sum = 0
   let n = 0
-  for (const r of responses.value) {
+  for (const r of completas.value) {
     for (const col of RATING_COLS) {
-      if (r[col] != null) {
+      // 0 = "No aplica": se excluye del promedio igual que null.
+      if (r[col] != null && r[col] !== 0) {
         sum += r[col]
         n += 1
       }
@@ -175,6 +186,10 @@ onMounted(fetchData)
             <strong>{{ total }}</strong>
             <span>respuestas</span>
           </div>
+          <div v-if="parciales" class="stat">
+            <strong>{{ parciales }}</strong>
+            <span>parciales</span>
+          </div>
           <div class="stat">
             <strong>{{ avgGeneral }}</strong>
             <span>promedio (1–5)</span>
@@ -192,6 +207,7 @@ onMounted(fetchData)
           <div class="card-head">
             <span class="date">{{ fmtDate(r.submitted_at) }}</span>
             <span class="who">{{ r.is_anonymous ? 'Anónimo' : r.employee_name || 'Sin nombre' }}</span>
+            <span v-if="!r.is_complete" class="status parcial">parcial</span>
             <span :class="['status', r.status]">{{ r.status }}</span>
           </div>
 
@@ -200,7 +216,7 @@ onMounted(fetchData)
               <h4>{{ area.label }}</h4>
               <div class="ratings">
                 <span v-for="[col, lbl] in area.items" :key="col" class="rating">
-                  <span class="face">{{ r[col] ? FACES[r[col]] : '·' }}</span>
+                  <span :class="['face', { na: r[col] === 0 }]">{{ faceFor(r[col]) }}</span>
                   <span class="rlabel">{{ lbl }}</span>
                 </span>
               </div>
@@ -388,6 +404,10 @@ onMounted(fetchData)
   background: var(--accent-bg);
   color: var(--accent-dark);
 }
+.status.parcial {
+  background: #fef3c7;
+  color: #b45309;
+}
 .status.revisado {
   background: #e0f2fe;
   color: #0369a1;
@@ -421,6 +441,11 @@ onMounted(fetchData)
 }
 .rating .face {
   font-size: 1.2rem;
+}
+.rating .face.na {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-faint);
 }
 .comment {
   margin: 10px 0 0;
