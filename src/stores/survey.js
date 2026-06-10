@@ -126,17 +126,14 @@ export const useSurveyStore = defineStore('survey', {
       }
     },
 
-    // Guardado parcial: upsert de la fila con is_complete=false mientras el
+    // Guardado parcial: persiste la fila con is_complete=false mientras el
     // empleado avanza. No sube audios (eso ocurre solo al enviar). Best-effort:
     // un fallo de red no debe romper el flujo del formulario.
     async saveDraft() {
-      if (this.completed || this.savingDraft || !this.id || !this.hasAnyData) return
+      if (this.completed || this.submitting || this.savingDraft || !this.id || !this.hasAnyData) return
       this.savingDraft = true
       try {
-        const { error } = await supabase
-          .from('survey_responses')
-          .upsert({ id: this.id, ...this.buildPayload(), is_complete: false })
-        if (error) throw error
+        await this.persist({ complete: false })
       } catch (err) {
         console.warn('[survey saveDraft]', err)
       } finally {
@@ -147,14 +144,13 @@ export const useSurveyStore = defineStore('survey', {
     async submit() {
       this.submitting = true
       try {
-        const id = this.id
         // Subir las notas de voz al bucket privado: {id}/{section}.{ext}
         const audioUrls = {}
         for (const section of AUDIO_SECTIONS) {
           const blob = this.audios[section]
           if (!blob) continue
           const ext = extensionForMime(blob.type)
-          const path = `${id}/${section}.${ext}`
+          const path = `${this.id}/${section}.${ext}`
           const { error: upErr } = await supabase.storage
             .from(AUDIO_BUCKET)
             .upload(path, blob, {
@@ -165,15 +161,23 @@ export const useSurveyStore = defineStore('survey', {
           audioUrls[`${section}_audio_url`] = path
         }
 
-        // upsert (no insert): la fila ya puede existir como borrador parcial.
-        const { error } = await supabase
-          .from('survey_responses')
-          .upsert({ id, ...this.buildPayload(), ...audioUrls, is_complete: true })
-        if (error) throw error
+        await this.persist({ audioUrls, complete: true })
         this.completed = true
       } finally {
         this.submitting = false
       }
+    },
+
+    // Único camino de escritura del público: RPC SECURITY DEFINER que hace el
+    // INSERT/UPDATE de la fila por su UUID. anon no puede escribir directo bajo
+    // RLS (ni UPDATE, porque requeriría exponer SELECT de los borradores).
+    async persist({ audioUrls = {}, complete = false }) {
+      const { error } = await supabase.rpc('save_survey_response', {
+        p_id: this.id,
+        p_data: { ...this.buildPayload(), ...audioUrls },
+        p_complete: complete,
+      })
+      if (error) throw error
     },
   },
 })

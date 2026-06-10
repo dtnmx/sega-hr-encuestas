@@ -74,6 +74,7 @@ function back() {
 
 async function onSubmit() {
   submitError.value = ''
+  clearTimeout(saveTimer) // no dejar un autoguardado pendiente durante el envío
   try {
     await store.submit()
     router.push('/gracias')
