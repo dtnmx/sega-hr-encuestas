@@ -169,6 +169,7 @@ onMounted(fetchData)
       </div>
       <div class="user">
         <span class="email">{{ auth.user?.email }}</span>
+        <button class="link" @click="router.push({ name: 'admin-password' })">Cambiar contraseña</button>
         <button class="link" @click="logout">Salir</button>
       </div>
     </header>

@@ -37,6 +37,12 @@ const routes = [
     component: () => import('../views/AdminPlanView.vue'),
     meta: { requiresAuth: true },
   },
+  {
+    path: '/admin/password',
+    name: 'admin-password',
+    component: () => import('../views/AdminChangePasswordView.vue'),
+    meta: { requiresAuth: true },
+  },
 ]
 
 const router = createRouter({

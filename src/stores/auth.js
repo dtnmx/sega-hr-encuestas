@@ -34,5 +34,12 @@ export const useAuthStore = defineStore('auth', {
       await supabase.auth.signOut()
       this.user = null
     },
+
+    // Cambia la contraseña del usuario autenticado (no requiere correo/SMTP:
+    // basta la sesión activa). El temporal lo cambia el propio admin al entrar.
+    async updatePassword(newPassword) {
+      const { error } = await supabase.auth.updateUser({ password: newPassword })
+      if (error) throw error
+    },
   },
 })
