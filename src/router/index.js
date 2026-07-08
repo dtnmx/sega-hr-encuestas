@@ -26,6 +26,12 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
+    path: '/admin/reporte',
+    name: 'admin-report',
+    component: () => import('../views/AdminReportView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/admin/comentarios',
     name: 'admin-comments',
     component: () => import('../views/AdminCommentsView.vue'),
